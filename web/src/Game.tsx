@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, ChangeEvent } from 'react';
 import './Game.css';
 // import Square from './components/Square';
 import Board from './components/Board';
@@ -9,12 +9,15 @@ const Game: React.FC = () => {
     const [history, setHistory] = useState([{
       squares: Array(grid*grid).fill(null)
     }]);
+    const [stepNumber, setStepNumber] = useState(0);
     const [xIsNext, setXIsNext] = useState(true);
 
     const winningLines: number[][]  = useMemo(() => calculateWinningLines(grid), [grid]);
 
     function handleClick(i: number) {
-        const current = history[history.length-1];
+        const newHistory = history.slice(0, stepNumber + 1);
+
+        const current = newHistory[newHistory.length-1];
       
         if(calculateWinner(current.squares) || current.squares[i]) {
             return;
@@ -23,10 +26,11 @@ const Game: React.FC = () => {
         const newSquares = [...current.squares];        
         newSquares[i] = xIsNext ? 'X' : 'O';
         setHistory(
-          history.concat([{
+          newHistory.concat([{
             squares: newSquares,
           }])
         );
+        setStepNumber(newHistory.length);
         setXIsNext(!xIsNext);
     }
 
@@ -63,6 +67,8 @@ const Game: React.FC = () => {
         }
         winningLines.push(secDiag);
 
+        console.log(winningLines);
+
         return winningLines;
     }
 
@@ -87,12 +93,41 @@ const Game: React.FC = () => {
       return null;
     }
 
-    const current = history[history.length-1];
+    function jumpTo(move: number) {
+      setStepNumber(move);
+      const evenMove = move % 2 === 0;
+      setXIsNext(evenMove); // all even moves are X moves, starting from 0
+    }
+
+    function handleChangeGrid(event: ChangeEvent<HTMLInputElement>) {
+      const newGrid = parseInt(event.target.value);
+      setGrid(newGrid);
+      setHistory([{
+        squares: Array(newGrid*newGrid).fill(null)
+      }]);
+      setStepNumber(0);
+      setXIsNext(true);
+    }
+
+    const current = history[stepNumber];
     const winner = calculateWinner(current.squares);
     let status;
     if (winner) {
         status = 'Winner is:' + winner;
+    } else if (stepNumber === grid*grid) {
+      status = 'Draw!';
     } else status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+
+    const moves = history.map((step, move) => {
+      const desc = move 
+        ? 'Go to move ' + move
+        : 'Go to game start'
+        return (
+          <li key={move}>
+            <button onClick={() => jumpTo(move)}>{desc}</button>
+          </li>
+        )
+    })
 
     return (
       <div className="game">
@@ -105,7 +140,16 @@ const Game: React.FC = () => {
         </div>
         <div className="game-info">
         <div className="status">{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
+        </div>
+        <div className="game-grid">
+          <span>Set Grid Size:<br/></span>
+          <input
+            type="number"
+            min="2"
+            max="9"
+            value={grid}
+            onChange={(event) => handleChangeGrid(event)}/>
         </div>
       </div>
     );
