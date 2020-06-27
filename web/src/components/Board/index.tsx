@@ -5,17 +5,17 @@ import './styles.css';
 interface Props {
     grid: number;
     squares: string[];
-    handleClick: (i: number) => void;
+    handleClickSquare: (i: number) => void;
 }
 
-const Board: React.FC<Props> = ({grid, squares, handleClick}) => {
+const Board: React.FC<Props> = ({grid, squares, handleClickSquare}) => {
 
     function renderSquare(i: number) {
         return (
          <Square
           key={i}
           value={squares[i]}
-          handleClick={() => handleClick(i)} 
+          handleClick={() => handleClickSquare(i)} 
          />
         );
     }
